@@ -1,0 +1,10 @@
+com/gauravi/productservice/service/ProductService.class
+com/gauravi/productservice/dto/ProductResponse.class
+com/gauravi/productservice/dto/ProductRequest.class
+com/gauravi/productservice/config/DataInitializer.class
+com/gauravi/productservice/repository/ProductRepository.class
+com/gauravi/productservice/exception/GlobalExceptionHandler$ErrorResponse.class
+com/gauravi/productservice/controller/ProductController.class
+com/gauravi/productservice/ProductServiceApplication.class
+com/gauravi/productservice/model/Product.class
+com/gauravi/productservice/exception/GlobalExceptionHandler.class

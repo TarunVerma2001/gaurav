@@ -1,0 +1,310 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gateway-service
+  
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: false
+      routes:
+        # Health Check - Low rate limit (10 requests per minute)
+        - id: health-check
+          uri: http://product-service:8081
+          predicates:
+            - Path=/api/products/health
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: health-check-circuit-breaker
+                fallbackUri: forward:/fallback/health
+        
+        # Get All Products - Medium rate limit (30 requests per minute)
+        - id: get-all-products
+          uri: http://product-service:8081
+          predicates:
+            - Method=GET
+            - Path=/api/products
+            - Query=page,size
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 30
+                redis-rate-limiter.burstCapacity: 60
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: get-all-products-circuit-breaker
+                fallbackUri: forward:/fallback/products
+        
+        # Get Product by ID - High rate limit (50 requests per minute)
+        - id: get-product-by-id
+          uri: http://product-service:8081
+          predicates:
+            - Method=GET
+            - Path=/api/products/{id}
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 50
+                redis-rate-limiter.burstCapacity: 100
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: get-product-by-id-circuit-breaker
+                fallbackUri: forward:/fallback/product
+        
+        # Get Product by Name - Medium rate limit (25 requests per minute)
+        - id: get-product-by-name
+          uri: http://product-service:8081
+          predicates:
+            - Method=GET
+            - Path=/api/products/name/{name}
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 25
+                redis-rate-limiter.burstCapacity: 50
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: get-product-by-name-circuit-breaker
+                fallbackUri: forward:/fallback/product
+        
+        # Create Product - Low rate limit (5 requests per minute)
+        - id: create-product
+          uri: http://product-service:8081
+          predicates:
+            - Method=POST
+            - Path=/api/products
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 5
+                redis-rate-limiter.burstCapacity: 10
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: create-product-circuit-breaker
+                fallbackUri: forward:/fallback/product
+        
+        # Update Product - Low rate limit (10 requests per minute)
+        - id: update-product
+          uri: http://product-service:8081
+          predicates:
+            - Method=PUT
+            - Path=/api/products/{id}
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: update-product-circuit-breaker
+                fallbackUri: forward:/fallback/product
+        
+        # Delete Product - Very low rate limit (3 requests per minute)
+        - id: delete-product
+          uri: http://product-service:8081
+          predicates:
+            - Method=DELETE
+            - Path=/api/products/{id}
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 3
+                redis-rate-limiter.burstCapacity: 5
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: delete-product-circuit-breaker
+                fallbackUri: forward:/fallback/product
+        
+        # Search Products - Medium rate limit (20 requests per minute)
+        - id: search-products
+          uri: http://product-service:8081
+          predicates:
+            - Method=GET
+            - Path=/api/products/search
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 20
+                redis-rate-limiter.burstCapacity: 40
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: search-products-circuit-breaker
+                fallbackUri: forward:/fallback/products
+        
+        # Filter by Category - High rate limit (40 requests per minute)
+        - id: filter-by-category
+          uri: http://product-service:8081
+          predicates:
+            - Method=GET
+            - Path=/api/products/category/{category}
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 40
+                redis-rate-limiter.burstCapacity: 80
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: filter-by-category-circuit-breaker
+                fallbackUri: forward:/fallback/products
+        
+        # Filter by Brand - High rate limit (40 requests per minute)
+        - id: filter-by-brand
+          uri: http://product-service:8081
+          predicates:
+            - Method=GET
+            - Path=/api/products/brand/{brand}
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 40
+                redis-rate-limiter.burstCapacity: 80
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: filter-by-brand-circuit-breaker
+                fallbackUri: forward:/fallback/products
+        
+        # Price Range Filter - Medium rate limit (25 requests per minute)
+        - id: price-range-filter
+          uri: http://product-service:8081
+          predicates:
+            - Method=GET
+            - Path=/api/products/price-range
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 25
+                redis-rate-limiter.burstCapacity: 50
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: price-range-filter-circuit-breaker
+                fallbackUri: forward:/fallback/products
+        
+        # Price Max Filter - Medium rate limit (25 requests per minute)
+        - id: price-max-filter
+          uri: http://product-service:8081
+          predicates:
+            - Method=GET
+            - Path=/api/products/price/max/{maxPrice}
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 25
+                redis-rate-limiter.burstCapacity: 50
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: price-max-filter-circuit-breaker
+                fallbackUri: forward:/fallback/products
+        
+        # Price Min Filter - Medium rate limit (25 requests per minute)
+        - id: price-min-filter
+          uri: http://product-service:8081
+          predicates:
+            - Method=GET
+            - Path=/api/products/price/min/{minPrice}
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 25
+                redis-rate-limiter.burstCapacity: 50
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: price-min-filter-circuit-breaker
+                fallbackUri: forward:/fallback/products
+        
+        # Stock Management - Low rate limit (15 requests per minute)
+        - id: stock-management
+          uri: http://product-service:8081
+          predicates:
+            - Method=GET
+            - Path=/api/products/stock/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 15
+                redis-rate-limiter.burstCapacity: 30
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: stock-management-circuit-breaker
+                fallbackUri: forward:/fallback/products
+        
+        # Update Stock - Very low rate limit (5 requests per minute)
+        - id: update-stock
+          uri: http://product-service:8081
+          predicates:
+            - Method=PATCH
+            - Path=/api/products/{id}/stock
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 5
+                redis-rate-limiter.burstCapacity: 10
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: update-stock-circuit-breaker
+                fallbackUri: forward:/fallback/product
+        
+        # Default route for any other product API calls
+        - id: default-product-route
+          uri: http://product-service:8081
+          predicates:
+            - Path=/api/products/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 20
+                redis-rate-limiter.burstCapacity: 40
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: default-product-circuit-breaker
+                fallbackUri: forward:/fallback/products
+  
+  data:
+    redis:
+      host: redis
+      port: 6379
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway,circuitbreakers
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.data.redis: DEBUG
+    com.gauravi.gatewayservice: DEBUG 
